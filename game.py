@@ -6,30 +6,40 @@ class Player:
     def __init__(self):
         self.skill = random.randint(10, 100)
         self.con = random.randint(10, 50)
-    
+
     def play(self):
         return self.skill - random.randint(0, self.con)
 
 class Team:
     def __init__(self):
         self.players = [Player() for _ in range(7)]
-        self.players.sort(key=lambda x: x.skill, reverse=True)
+        self.sort_players()
 
-    def play(self, line):
-        lineups = {
-            'first': [0, 1, 2],
-            'second': [0, 3, 4],
-            'third': [1, 5, 6]
-        }
-        return sum(self.players[i].play() for i in lineups[line])
+    def sort_players(self):
+        self.players.sort(key=lambda player: player.skill, reverse=True)
+
+    def replace_random_player(self):
+        # Remove a random player
+        if self.players:  # Ensure there is at least one player to remove
+            random_index = random.randint(0, len(self.players) - 1)
+            self.players.pop(random_index)
+        # Add a new player
+        self.players.append(Player())
+        # Re-sort the players
+        self.sort_players()
 
 class League:
     def __init__(self):
-        team_names = ["Quantum", "Neon", "Shadows", "Cosmos", "Thunder", 
-                      "Voltage", "Eclipse", "Vortex", "Sapphire", "Ironside", 
-                      "Celestial", "Galactic", "Inferno", "Blizzard", "Fireborne", "Mystic"]
-        self.teams = [Team() for _ in range(16)]
+        team_names = ["Quantum", "Neon", "Shadows", "Cosmos", "Thunder", "Voltage", "Eclipse", "Vortex", "Sapphire", "Ironside", "Celestial", "Galactic", "Inferno", "Blizzard", "Fireborne", "Mystic"]
+        self.teams = [Team() for _ in range(len(team_names))]
         self.team_dict = {name: team for name, team in zip(team_names, self.teams)}
+
+    def update_teams(self):
+        for team in self.teams:
+            team.replace_random_player()
+
+# To show that it worked, you could print out the skills of players in a specific team
+
 
     def match(self, team1_name, team2_name):
         team1 = self.team_dict[team1_name]
@@ -65,15 +75,24 @@ class League:
 
 def main():
     league = League()
-    results = league.full_round_robin()
-    print(f"")
-    for team, wins in sorted(results.items(), key=lambda item: item[1], reverse=True):
-        print(f"{team}: {wins} wins")
-    # while True:
-    #     team1 = input("Team 1: ")
-    #     team2 = input("Team 2: ")
-    #     try:
-    #         league.match(team1, team2)
-    #     except:
-    #         print(f"you may have misentered a name")
+    # results = league.full_round_robin()
+    # print(f"")
+    # for team, wins in sorted(results.items(), key=lambda item: item[1], reverse=True):
+    #     print(f"{team}: {wins} wins")
+
+    # for idx, player in enumerate(league.team_dict["Quantum"].players):
+    #     print(f"Player {idx + 1}: Skill {player.skill}")
+    # league.update_teams()
+    # print(f"")
+    # for idx, player in enumerate(league.team_dict["Quantum"].players):
+    #     print(f"Player {idx + 1}: Skill {player.skill}")
+
+
+    while True:
+        team1 = input("Team 1: ")
+        team2 = input("Team 2: ")
+        try:
+            league.match(team1, team2)
+        except:
+            print(f"you may have misentered a name")
 main()
