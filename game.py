@@ -1,6 +1,7 @@
 import random
-import copy
 import itertools
+import pickle
+
 
 class Player:
     def __init__(self):
@@ -14,19 +15,27 @@ class Team:
     def __init__(self):
         self.players = [Player() for _ in range(7)]
         self.sort_players()
+        self.wins = 0
+        self.losses = 0
 
     def sort_players(self):
         self.players.sort(key=lambda player: player.skill, reverse=True)
 
     def replace_random_player(self):
-        # Remove a random player
-        if self.players:  # Ensure there is at least one player to remove
+        if self.players:
             random_index = random.randint(0, len(self.players) - 1)
             self.players.pop(random_index)
-        # Add a new player
         self.players.append(Player())
-        # Re-sort the players
         self.sort_players()
+
+    def play(self, line):
+        if line == "first":
+            players_to_play = [0, 1, 2]  # indexes of players in the team
+        elif line == "second":
+            players_to_play = [0, 3, 4]
+        elif line == "third":
+            players_to_play = [1, 5, 6]
+        return sum(self.players[i].play() for i in players_to_play)
 
 class League:
     def __init__(self):
@@ -37,9 +46,6 @@ class League:
     def update_teams(self):
         for team in self.teams:
             team.replace_random_player()
-
-# To show that it worked, you could print out the skills of players in a specific team
-
 
     def match(self, team1_name, team2_name):
         team1 = self.team_dict[team1_name]
@@ -55,44 +61,76 @@ class League:
             else:
                 team2_points += 1
         if team1_points > team2_points:
-            print(f"{team1_name} wins the match {team1_points}-{team2_points}.")
+            print(f"{team1_name} wins the match against {team2_name} {team1_points}-{team2_points}.")
+            team1.wins += 1
+            team2.losses += 1
             return team1_name, team2_name
         else:
-            print(f"{team2_name} wins the match {team2_points}-{team1_points}.")
+            print(f"{team2_name} wins the match against {team1_name} {team2_points}-{team1_points}.")
+            team1.losses += 1
+            team2.wins += 1
             return team2_name, team1_name
 
-    def full_round_robin(self):
-        results = {team: 0 for team in self.team_dict.keys()}
-        
-        # Generate all possible pairings
-        pairings = list(itertools.combinations(self.team_dict.keys(), 2))
-        
-        for team1, team2 in pairings:
-            winner, _ = self.match(team1, team2)
-            results[winner] += 1
-        
-        return results
+
+    def round_robin(self):
+        """do round robin, ever team plays every tem"""
+        m = []
+        for i, t1 in enumerate(self.team_dict.keys()):
+                    for j, t2 in enumerate(self.team_dict.keys()):
+                        if i != j:
+                            m.append((t1, t2))
+        random.shuffle(m)
+        while m:
+            team1, team2 = m.pop()
+            _, _ = self.match(team1, team2)
+
+    def reset(self):
+        for team in self.team_dict.items():
+            team.wins = 0
+            team.loses = 0
+            
+
+def save_league_state(league):
+        """
+        Save the state of the league to a file using pickle.
+
+        Args:
+        league (League): The league object to be saved.
+        filename (str): The name of the file where the league state will be saved.
+        """
+        with open("save", 'wb') as f:
+            pickle.dump(league, f)
+
+def load_league_state():
+        """
+        Load the state of the league from a file using pickle.
+
+        Args:
+        filename (str): The name of the file from which to load the league state.
+
+        Returns:
+        League: The loaded league object.
+        """
+        with open("save", 'rb') as f:
+            return pickle.load(f)
+
+
+
 
 def main():
-    league = League()
-    # results = league.full_round_robin()
-    # print(f"")
-    # for team, wins in sorted(results.items(), key=lambda item: item[1], reverse=True):
-    #     print(f"{team}: {wins} wins")
+    league = load_league_state()
+    
+    league.round_robin()
 
-    # for idx, player in enumerate(league.team_dict["Quantum"].players):
-    #     print(f"Player {idx + 1}: Skill {player.skill}")
-    # league.update_teams()
-    # print(f"")
-    # for idx, player in enumerate(league.team_dict["Quantum"].players):
-    #     print(f"Player {idx + 1}: Skill {player.skill}")
+    sorted_teams = sorted(league.team_dict.items(), key=lambda item: item[1].wins, reverse=True)
+    # Display results
+    print("\n\nResults\n")
+    for name, team in sorted_teams:
+        print(f"{name}: {team.wins} Wins, {team.losses} Losses")
 
 
-    while True:
-        team1 = input("Team 1: ")
-        team2 = input("Team 2: ")
-        try:
-            league.match(team1, team2)
-        except:
-            print(f"you may have misentered a name")
-main()
+if __name__ == "__main__":
+    main()
+
+        
+        
