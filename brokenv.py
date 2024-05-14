@@ -126,13 +126,6 @@ def main():
             save_league_state(league)
             break
         team2 = input("team2: ")
-        if team2 == "p":
-            league.round_robin()
-            sorted_teams = sorted(league.team_dict.items(), key=lambda item: item[1].wins, reverse=True)
-            # Display results
-            print("\n\nResults\n")
-            for name, team in sorted_teams:
-                print(f"{name}: {team.wins} Wins, {team.losses} Losses")
         try: league.match(team1, team2)
         except: print("misinput")
 
